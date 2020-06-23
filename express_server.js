@@ -31,6 +31,15 @@ function generateRandomString() {
   }
   return result;
 }
+// loop over users to find user_id with matching email given
+function findIDbyemail(em) {
+  for (key in users) {
+    // console.log('this is keys of usres: ', typeof key);
+    if (users[key].email === em) {
+      return key;
+    }
+  }
+}
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -85,8 +94,10 @@ app.post('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 app.post('/login', (req, res) => {
-  const { username } = req.body;
-  res.cookie('username', username);
+  const { email } = req.body;
+  let user_id = findIDbyemail(email);
+  console.log('user_id is: ', user_id, ' of ', email);
+  res.cookie('user_id', user_id);
   res.redirect('/urls');
 });
 app.post('/logout', (req, res) => {
