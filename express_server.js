@@ -14,6 +14,13 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  }
+};
 
 function generateRandomString() {
   let result = '';
@@ -27,8 +34,11 @@ function generateRandomString() {
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
+  // console.log('cookies are: ', req.cookies.user_id)
   if (req.cookies) {
-    templateVars.username = req.cookies.username;
+    // console.log('yoooo=----------------')
+    templateVars.users = users;
+    templateVars.user_id = req.cookies.user_id;
   }
   res.render('urls_index', templateVars);
 });
@@ -80,10 +90,17 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
+  res.redirect('/urls');
+});
+app.post('/register', (req, res) => {
+  let id = generateRandomString();
+  let { email, password } = req.body;
+  let user = { id, email, password };
+  users[id] = user;
+  res.cookie('user_id', id);
   res.redirect('/urls');
 })
-
 app.listen(PORT, () => {
   console.log(`app listening on port ${PORT}!`);
 });
