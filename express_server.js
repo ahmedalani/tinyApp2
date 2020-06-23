@@ -1,6 +1,8 @@
 /* eslint-disable */
+const cookieParser = require('cookie-parser');
 const express = require('express');
 const app = express();
+app.use(cookieParser());
 const PORT = 8080;
 
 const bodyParser = require("body-parser");
@@ -23,17 +25,11 @@ function generateRandomString() {
   return result;
 }
 
-app.get('/', (req, res) => {
-  res.send('Hello!!');
-});
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
+  if (req.cookies) {
+    templateVars.username = req.cookies.username;
+  }
   res.render('urls_index', templateVars);
 });
 app.get('/urls/new', (req, res) => {
@@ -66,7 +62,6 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect('/urls');
 });
 app.post('/urls/:shortURL/edit', (req, res) => {
-  console.log(urlDatabase);
   const { shortURL } = req.params;
   res.redirect(`/urls/${shortURL}`);
 });
@@ -76,6 +71,11 @@ app.post('/urls/:id', (req, res) => {
   urlDatabase[id] = longURL;
   res.redirect('/urls');
 });
+app.post('/login', (req, res) => {
+  const { username } = req.body;
+  res.cookie('username', username);
+  res.redirect('/urls');
+})
 
 app.listen(PORT, () => {
   console.log(`app listening on port ${PORT}!`);
