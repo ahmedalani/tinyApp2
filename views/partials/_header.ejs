@@ -14,8 +14,9 @@
     <div>
       <%if (username) {%>
       <form class="form-inline" action="/logout" method="POST">
-        <h3><%= username %></h3>
+        <h5>logged in As: </h5>
         <div class="form-group mb-2">
+          <h3 style="margin-right: 1em; margin-top: .05em; margin-left: 0.5em;"> <%= username %> </h3>
           <button type="submit" class="btn btn-primary">logout</button>
         </div>
       </form>
