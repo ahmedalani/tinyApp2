@@ -111,7 +111,6 @@ app.post('/urls/:id', (req, res) => {
 });
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-  console.log('from /login: ', 'emial is: ', email, 'pass is: ', password)
   let user_id = findIDbyemail(email);
   if (!user_id || users[user_id].password !== password) {
     res.status(403).send('invalid email address or password go back and try again!');
