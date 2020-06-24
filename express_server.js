@@ -34,7 +34,6 @@ function generateRandomString() {
 // loop over users to find user_id with matching email given
 function findIDbyemail(em) {
   for (key in users) {
-    // console.log('this is keys of usres: ', typeof key);
     if (users[key].email === em) {
       return key;
     }
@@ -53,9 +52,7 @@ function doesEmailExist(em) {
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
-  // console.log('cookies are: ', req.cookies.user_id)
   if (req.cookies) {
-    // console.log('yoooo=----------------')
     templateVars.users = users;
     templateVars.user_id = req.cookies.user_id;
   }
@@ -68,10 +65,7 @@ app.get('/urls/:shortURL', (req, res) => {
   const { shortURL } = req.params;
   const longURL = urlDatabase[shortURL];
   const user_id = req.cookies.user_id;
-  console.log('from urls/shortURL : ', user_id, 'users: ', users);
   const templateVars = { shortURL, longURL, users, user_id };
-  console.log('from urls/shortURL : tempVars', templateVars);
-
   res.render('urls_show', templateVars);
 });
 app.get('/u/:shortURL', (req, res) => {
@@ -100,7 +94,6 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 app.post('/urls/:shortURL/edit', (req, res) => {
   const { shortURL } = req.params;
   user_id = req.cookies.user_id
-  console.log('from edit : ', user_id);
   res.redirect(`/urls/${shortURL}`);
 });
 app.post('/urls/:id', (req, res) => {
@@ -112,7 +105,6 @@ app.post('/urls/:id', (req, res) => {
 app.post('/login', (req, res) => {
   const { email } = req.body;
   let user_id = findIDbyemail(email);
-  console.log('user_id is: ', user_id, ' of ', email);
   res.cookie('user_id', user_id);
   res.redirect('/urls');
 });
@@ -131,7 +123,6 @@ app.post('/register', (req, res) => {
     let id = generateRandomString();
     let user = { id, email, password };
     users[id] = user;
-    console.log('from register: ', users)
     res.cookie('user_id', id);
     res.redirect('/urls');
   }
