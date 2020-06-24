@@ -77,7 +77,10 @@ app.get('/u/:shortURL', (req, res) => {
   }
 });
 app.get('/register', (req, res) => {
-  res.render('register');
+  let user_id;
+  let users;
+  const templateVars = { users, user_id };
+  res.render('register', templateVars);
 });
 app.get('/login', (req, res) => {
   res.render('login');

@@ -9,6 +9,7 @@
 </head>
 
 <body>
+  <%-include('partials/_header.ejs', users, user_id) %>
   <div>
     <h3>Register</h3>
     <form class="form-inline" action="/register" method="POST">
