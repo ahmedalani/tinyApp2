@@ -110,8 +110,12 @@ app.post('/login', (req, res) => {
   const { email, password } = req.body;
   console.log('from /login: ', 'emial is: ', email, 'pass is: ', password)
   let user_id = findIDbyemail(email);
-  res.cookie('user_id', user_id);
-  res.redirect('/urls');
+  if (!user_id || users[user_id].password !== password) {
+    res.status(403).send('invalid email address or password go back and try again!');
+  } else {
+    res.cookie('user_id', user_id);
+    res.redirect('/urls');
+  }
 });
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
