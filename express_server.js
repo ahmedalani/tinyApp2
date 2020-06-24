@@ -19,6 +19,11 @@ const users = {
     id: "userRandomID",
     email: "user@example.com",
     password: "purple-monkey-dinosaur"
+  },
+  "3lehaID": {
+    id: "3lehaID",
+    email: "3leha@id",
+    password: "id"
   }
 };
 
@@ -59,7 +64,18 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  let templateVars = {}
+  if (req.cookies.user_id) {
+    console.log('from urls/new ', req.cookies.user_id)
+    templateVars.users = users;
+    templateVars.user_id = req.cookies.user_id;
+    res.render('urls_new', templateVars);
+  } else {
+    let user_id;
+    let users;
+    templateVars = { user_id, users }
+    res.redirect('/login');
+  }
 });
 app.get('/urls/:shortURL', (req, res) => {
   const { shortURL } = req.params;
