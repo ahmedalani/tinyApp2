@@ -79,6 +79,10 @@ app.get('/u/:shortURL', (req, res) => {
 app.get('/register', (req, res) => {
   res.render('register');
 });
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
 
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
@@ -103,7 +107,8 @@ app.post('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 app.post('/login', (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
+  console.log('from /login: ', 'emial is: ', email, 'pass is: ', password)
   let user_id = findIDbyemail(email);
   res.cookie('user_id', user_id);
   res.redirect('/urls');
@@ -126,7 +131,8 @@ app.post('/register', (req, res) => {
     res.cookie('user_id', id);
     res.redirect('/urls');
   }
-})
+});
+
 app.listen(PORT, () => {
   console.log(`app listening on port ${PORT}!`);
 });
