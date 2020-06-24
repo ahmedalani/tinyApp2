@@ -27,6 +27,17 @@ const users = {
   }
 };
 
+// loop over urlDatabase to find all urls created by a specific user using user_id
+function urlsforUser(user_id) {
+  let output = {}
+  for (key in urlDatabase) {
+    let element = urlDatabase[key];
+    if (element.userID === user_id) {
+      output[key] = element;
+    }
+  }
+  return output;
+}
 function generateRandomString() {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -56,10 +67,12 @@ function doesEmailExist(em) {
 }
 
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  if (req.cookies) {
+  const templateVars = { urls: {}, users: {}, user_id: '' };
+  if (req.cookies.user_id) {
     templateVars.users = users;
     templateVars.user_id = req.cookies.user_id;
+    let userURLs = urlsforUser(req.cookies.user_id);
+    templateVars.urls = userURLs;
   }
   res.render('urls_index', templateVars);
 });
@@ -121,11 +134,24 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   user_id = req.cookies.user_id
   res.redirect(`/urls/${shortURL}`);
 });
+// from urls_show edit form
 app.post('/urls/:id', (req, res) => {
-  const shortURL = req.params.id;
-  const { longURL } = req.body;
-  urlDatabase[shortURL]["longURL"] = longURL;
-  res.redirect('/urls');
+  if (req.cookies.user_id) {
+    const shortURL = req.params.id;
+    const { longURL } = req.body;
+    const { user_id } = req.cookies;
+    let userURLs = urlsforUser(user_id);
+    if (userURLs.hasOwnProperty(shortURL)) {
+      userURLs[shortURL].longURL = longURL;
+      res.redirect('/urls');
+    } else {
+      res.send("you don't have access to this URL")
+    }
+  } else {
+    res.send('Please login to view or edit');
+  }
+  // urlDatabase[shortURL]["longURL"] = longURL;
+  // res.redirect('/urls');
 });
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
