@@ -18,7 +18,7 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "di"
   },
   "3lehaID": {
     id: "3lehaID",
@@ -79,7 +79,6 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   let templateVars = {}
   if (req.cookies.user_id) {
-    console.log('from urls/new ', req.cookies.user_id)
     templateVars.users = users;
     templateVars.user_id = req.cookies.user_id;
     res.render('urls_new', templateVars);
@@ -121,13 +120,24 @@ app.post('/urls', (req, res) => {
   const { longURL } = req.body;
   const user_id = req.cookies.user_id;
   urlDatabase[shortURL] = { longURL, userID: user_id };
-  console.log('from 109: ', urlDatabase)
   res.redirect(`/urls/${shortURL}`);
 });
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const { shortURL } = req.params;
-  delete urlDatabase[shortURL];
-  res.redirect('/urls');
+  if (req.cookies.user_id) {
+    const shortURL = req.params.shortURL;
+    const { user_id } = req.cookies;
+    let userURLs = urlsforUser(user_id);
+    if (userURLs.hasOwnProperty(shortURL)) {
+      delete urlDatabase[shortURL];
+      delete userURLs[shortURL];
+      res.redirect('/urls');
+    } else {
+      res.status(403).send("you don't have access to this URL")
+    }
+  } else {
+    res.status(403).send('Please login to delete');
+  }
+
 });
 app.post('/urls/:shortURL/edit', (req, res) => {
   const { shortURL } = req.params;
