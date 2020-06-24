@@ -40,6 +40,16 @@ function findIDbyemail(em) {
     }
   }
 }
+// loop over users insearch of matching email
+function doesEmailExist(em) {
+  for (key in users) {
+    emailinDatabase = users[key].email
+    if (emailinDatabase === em) {
+      return true;
+    }
+  }
+  return false;
+}
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -57,7 +67,11 @@ app.get('/urls/new', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const { shortURL } = req.params;
   const longURL = urlDatabase[shortURL];
-  const templateVars = { shortURL, longURL };
+  const user_id = req.cookies.user_id;
+  console.log('from urls/shortURL : ', user_id, 'users: ', users);
+  const templateVars = { shortURL, longURL, users, user_id };
+  console.log('from urls/shortURL : tempVars', templateVars);
+
   res.render('urls_show', templateVars);
 });
 app.get('/u/:shortURL', (req, res) => {
@@ -85,6 +99,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 app.post('/urls/:shortURL/edit', (req, res) => {
   const { shortURL } = req.params;
+  user_id = req.cookies.user_id
+  console.log('from edit : ', user_id);
   res.redirect(`/urls/${shortURL}`);
 });
 app.post('/urls/:id', (req, res) => {
@@ -104,13 +120,21 @@ app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/urls');
 });
+// create a new user with new ID then add it to users obj then set cookie
 app.post('/register', (req, res) => {
-  let id = generateRandomString();
   let { email, password } = req.body;
-  let user = { id, email, password };
-  users[id] = user;
-  res.cookie('user_id', id);
-  res.redirect('/urls');
+  if (email === '') {
+    res.status(400).send('Something broke!')
+  } else if (doesEmailExist(email)) {
+    res.status(400).send('email exist, please try another email address')
+  } else {
+    let id = generateRandomString();
+    let user = { id, email, password };
+    users[id] = user;
+    console.log('from register: ', users)
+    res.cookie('user_id', id);
+    res.redirect('/urls');
+  }
 })
 app.listen(PORT, () => {
   console.log(`app listening on port ${PORT}!`);
