@@ -167,10 +167,12 @@ app.post('/urls/:id', (req, res) => {
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   let user_id = findIDbyemail(email);
-  if (!user_id || users[user_id].password !== password) {
+  const passwordCheck = bcrypt.compareSync(password, users[user_id].hashedPassword)
+  if (!user_id || !passwordCheck) {
     res.status(403).send('invalid email address or password go back and try again!');
   } else {
     res.cookie('user_id', user_id);
+    console.log(users)
     res.redirect('/urls');
   }
 });
@@ -187,7 +189,8 @@ app.post('/register', (req, res) => {
     res.status(400).send('email exist, please try another email address')
   } else {
     let id = generateRandomString();
-    let user = { id, email, password };
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    let user = { id, email, hashedPassword };
     users[id] = user;
     res.cookie('user_id', id);
     res.redirect('/urls');
