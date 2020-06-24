@@ -9,26 +9,22 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <%if (!user_id) {%>
+        <a class="nav-item nav-link" href="/login">login</a>
+        <a class="nav-item nav-link" href="/register">Register</a>
+        <%}%>
       </div>
     </div>
     <div>
       <%if (user_id) {%>
-      <form class="form-inline" action="/logout" method="POST">
-        <h5>logged in As: </h5>
-        <div class="form-group mb-2">
-          <h3 style="margin-right: 1em; margin-top: .05em; margin-left: 0.5em;"> <%= users[user_id].email %> </h3>
-          <button type="submit" class="btn btn-primary">logout</button>
-        </div>
-      </form>
-      <%} else {%>
-      <form class="form-inline" action="/login" method="POST">
-        <div class="form-group mb-2">
-          <input class="form-control" type="text" name="email" placeholder="email@email.com"
-            style="width: 300px; margin: 1em">
-          <button type="submit" class="btn btn-primary">login</button>
-        </div>
-      </form>
-      <%}%>
+        <form class="form-inline" action="/logout" method="POST">
+          <h5>logged in As: </h5>
+          <div class="form-group mb-2">
+            <h3 style="margin-right: 1em; margin-top: .05em; margin-left: 0.5em;"> <%= users[user_id].email %> </h3>
+            <button type="submit" class="btn btn-primary">logout</button>
+          </div>
+        </form>
+        <%}%>
     </div>
   </nav>
 </header>
