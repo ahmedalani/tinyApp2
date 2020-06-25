@@ -73,12 +73,14 @@ function doesEmailExist(em) {
 
 app.get('/', (req, res) => {
   if (req.session.user_id) {
-    console.log('from line 76: ', req.session);
     res.redirect('/urls');
   } else {
     res.redirect('/login');
   }
 })
+// redirection from POST /urls/:shortURL/delete
+// redirection from GET & POST login when user is logged in
+// redirection from GET & POST register when user logged in
 app.get('/urls', (req, res) => {
   const templateVars = { urls: {}, users: {}, user_id: '' };
   if (req.session.user_id) {
@@ -89,9 +91,9 @@ app.get('/urls', (req, res) => {
   }
   res.render('urls_index', templateVars);
 });
+// create a new link endpoint (from _header)
 app.get('/urls/new', (req, res) => {
   let templateVars = {}
-  console.log('from line 86: ', req.session.user_id)
   if (req.session.user_id) {
     templateVars.users = users;
     templateVars.user_id = req.session.user_id;
@@ -103,12 +105,18 @@ app.get('/urls/new', (req, res) => {
     res.redirect('/login');
   }
 });
+// edit button endpoint from urls_show
+// also from POST('/urls) redirection 
 app.get('/urls/:shortURL', (req, res) => {
   const { shortURL } = req.params;
-  const longURL = urlDatabase[shortURL].longURL;
   const user_id = req.session.user_id;
-  const templateVars = { shortURL, longURL, users, user_id };
-  res.render('urls_show', templateVars);
+  if (user_id && user_id === urlDatabase[shortURL].userID) {
+    const longURL = urlDatabase[shortURL].longURL;
+    const templateVars = { shortURL, longURL, users, user_id };
+    res.render('urls_show', templateVars);
+  } else {
+    res.status(403).send('please login with correct email address to edit urls');
+  }
 });
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -118,28 +126,59 @@ app.get('/u/:shortURL', (req, res) => {
     res.redirect(longURL);
   }
 });
-app.get('/register', (req, res) => {
-  let user_id;
-  let users;
-  const templateVars = { users, user_id };
-  res.render('register', templateVars);
-});
 app.get('/login', (req, res) => {
-  res.render('login');
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.render('login');
+  }
+});
+app.get('/register', (req, res) => {
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    let user_id;
+    let users;
+    const templateVars = { users, user_id };
+    res.render('register', templateVars);
+  }
 });
 
-
+// urls_new submit form endpoint
+// redierction from POST /urls/:id
 app.post('/urls', (req, res) => {
-  const shortURL = generateRandomString();
-  const { longURL } = req.body;
   const user_id = req.session.user_id;
-  urlDatabase[shortURL] = { longURL, userID: user_id };
-  res.redirect(`/urls/${shortURL}`);
+  if (user_id) {
+    const shortURL = generateRandomString();
+    const { longURL } = req.body;
+    urlDatabase[shortURL] = { longURL, userID: user_id };
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(403).send("you need to login")
+  }
+});
+// urls_show edit form endpoint
+app.post('/urls/:id', (req, res) => {
+  const { user_id } = req.session;
+  if (user_id) {
+    const shortURL = req.params.id;
+    const { longURL } = req.body;
+    let userURLs = urlsforUser(user_id);
+    // check if user has access to given url
+    if (userURLs.hasOwnProperty(shortURL)) {
+      userURLs[shortURL].longURL = longURL;
+      res.redirect('/urls');
+    } else {
+      res.send("you don't have access to this URL")
+    }
+  } else {
+    res.send('Please login to view or edit');
+  }
 });
 app.post('/urls/:shortURL/delete', (req, res) => {
-  if (req.session.user_id) {
+  const { user_id } = req.session;
+  if (user_id) {
     const shortURL = req.params.shortURL;
-    const { user_id } = req.session;
     let userURLs = urlsforUser(user_id);
     if (userURLs.hasOwnProperty(shortURL)) {
       delete urlDatabase[shortURL];
@@ -151,52 +190,28 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   } else {
     res.status(403).send('Please login to delete');
   }
-
 });
-app.post('/urls/:shortURL/edit', (req, res) => {
-  const { shortURL } = req.params;
-  user_id = req.session.user_id
-  res.redirect(`/urls/${shortURL}`);
-});
-// from urls_show edit form
-app.post('/urls/:id', (req, res) => {
-  if (req.session.user_id) {
-    const shortURL = req.params.id;
-    const { longURL } = req.body;
-    const { user_id } = req.session;
-    let userURLs = urlsforUser(user_id);
-    if (userURLs.hasOwnProperty(shortURL)) {
-      userURLs[shortURL].longURL = longURL;
-      res.redirect('/urls');
-    } else {
-      res.send("you don't have access to this URL")
-    }
-  } else {
-    res.send('Please login to view or edit');
-  }
-  // urlDatabase[shortURL]["longURL"] = longURL;
-  // res.redirect('/urls');
-});
+// login form endpoint
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   let user_id = findIDbyemail(email);
-  console.log('from line 174: ', users[user_id]);
-  const passwordCheck = bcrypt.compareSync(password, users[user_id].hashedPassword)
-  if (!user_id || !passwordCheck) {
+  if (!user_id || !password) {
     res.status(403).send('invalid email address or password go back and try again!');
   } else {
-    req.session.user_id = user_id;
-    res.redirect('/urls');
+    const passwordCheck = bcrypt.compareSync(password, users[user_id].hashedPassword)
+    if (!passwordCheck) {
+      res.status(403).send('invalid email address or password go back and try again!');
+    } else {
+      req.session.user_id = user_id;
+      res.redirect('/urls');
+    }
   }
 });
-app.post('/logout', (req, res) => {
-  req.session.user_id = '';
-  res.redirect('/urls');
-});
 // create a new user with new ID then add it to users obj then set cookie
+// register form endpoint
 app.post('/register', (req, res) => {
   let { email, password } = req.body;
-  if (email === '') {
+  if (email === '' || password === '') {
     res.status(400).send('Something broke!')
   } else if (doesEmailExist(email)) {
     res.status(400).send('email exist, please try another email address')
@@ -208,6 +223,10 @@ app.post('/register', (req, res) => {
     req.session.user_id = id;
     res.redirect('/urls');
   }
+});
+app.post('/logout', (req, res) => {
+  req.session.user_id = '';
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {
